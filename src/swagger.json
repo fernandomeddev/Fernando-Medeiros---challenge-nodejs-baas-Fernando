@@ -1,0 +1,721 @@
+{
+   "openapi":"3.0.0",
+   "info":{
+       "title":"BAAS - API de Operação de pagamento P2P",
+       "description":"Essa Api tem por objetivo cadastro/atualização/exclusao de um novo Usuário, confirmação de usúario por meio de envio de documentação(jpeg, jpg, pjpeg, png, gif), criação/atualização/exclusão  de um usuário adminstrador, listagem da documentação enviada por um usuário não admin para um usuário admin, cadastro/atualização/exclusao de uma nova conta associada á um usuário não administrador, por um usuário administrador, e operação de transferência de valores entre usuários que possuam uma conta, Crie um usuário admin para efetuar os testes na camada '/admin'",
+       "termsOfService":"http://localhost:3000/terms",
+       "contact":{
+           "email":"fernandodesenvti@gmail.com"
+       },
+       "version":"1.0.0"
+   },
+   "servers":[
+       {
+           "url":"http://localhost:3000",
+           "description":"API de Test"
+       }
+   ],
+   "paths":{
+        "/auth/register": {
+            "post":{
+                "summary": "Cadastro usuário",
+                "description":"criação de um novo usuário importante criar um usuário administrador e dois não administradores para execução dos testes.",
+                "tags":["Users"],
+                "requestBody":{
+                    "content":{
+                        "application/json": {
+                            "schema":{
+                                "$ref":"#/components/schemas/User"
+                            },
+                            "examples":{
+                                "user":{
+                                    "value":{
+                                        "name":"Anakin Skywalker",
+                                        "email":"imyourfather@empire.com",
+                                        "password":"padme123",
+                                        "confirmPassword":"padme123"
+                                    }
+                                },
+                                "userAdmin":{
+                                    "value":{
+                                        "name":"Luke Skywalker",
+                                        "email":"youkillmyfather@resistence.com",
+                                        "password":"oldben123",
+                                        "confirmPassword":"oldben123",
+                                        "isAdmin":"true"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "400": {
+                        "description":"User already exists"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "$ref":"#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/authenticate": {
+            "post":{
+                "summary": "Login /autenticação de usuário",
+                "description":"Login de usuário",
+                "tags":["Users"],
+                "requestBody":{
+                    "content":{
+                        "application/json": {
+                            "schema":{
+                                "$ref":"#/components/schemas/User"
+                            },
+                            "examples":{
+                                "user":{
+                                    "value":{
+                                        "email":"imyourfather@empire.com",
+                                        "password":"padme123"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "400": {
+                        "description":"User already exists"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "$ref":"#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/uploadfile/{userId}":{
+            "post":{
+                "summary": "envio da foto do documento",
+                "description":"envio da foto do documento por um usuário não admin",
+                "tags":["Documents"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"userId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"envia um documento de imagem para um usuário especifico",
+                        "required":true
+                    }
+                ],
+                "requestBody":{
+                    "content":{
+                        "multipart/form-data": {
+                            "schema": {
+                              "type": "object",
+                              "properties": {
+                                "file": {
+                                  "type": "string",
+                                  "format": "binary"
+                                }
+                              }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "400": {
+                        "description":"User already exists"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "$ref":"#/components/schemas/uploadDoc"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/uploadfile/{userEmail}": {
+            "get":{
+                "summary": "Busca os documentos enviados por um usuário ",
+                "description":"busca todos os documentos relacinados ao um unico user Id",
+                "tags":["Documents"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"userEmail",
+                        "type":"string",
+                        "in":"path",
+                        "description":"Busca de documento por email",
+                        "required":true
+                    }
+                ],
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "400": {
+                        "description":"User already exists"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "$ref":"#/components/schemas/DocsByUser"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/{userId}": {
+            "get":{
+                "summary": "Busca todos os Usuários ",
+                "description":"busca todos os usuários do sistema",
+                "tags":["Admin"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"userId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"ID de um usuário",
+                        "required":true
+                    }
+                ],
+                "responses":{
+                    "400":{
+                        "description":"User Not exists"
+                    },
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object"
+                                },
+                                "examples":{
+                                    "userAdmin":{
+                                        "value":{
+                                            "isAdmin": false,
+			                            "_id": "629982c064f9ef1149c9057a",
+			                            "name": "teste",
+			                            "email": "teste@teste.com",
+			                            "creatAt": "2022-06-03T03:40:48.453Z"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/{adminId}/allusers": {
+            "get":{
+                "summary": "Busca todos os Usuários ",
+                "description":"busca todos os usuários do sistema",
+                "tags":["Admin"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"adminId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"ID de um usuário admin",
+                        "required":true
+                    }
+                ],
+                "responses":{
+                    "400":{
+                        "description":"User Not exists"
+                    },
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object"
+                                },
+                                "examples":{
+                                    "userAdmin":{
+                                        "value":{
+                                            "isAdmin": false,
+			                            "_id": "629982c064f9ef1149c9057a",
+			                            "name": "teste",
+			                            "email": "teste@teste.com",
+			                            "creatAt": "2022-06-03T03:40:48.453Z"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/{adminId}/allusers/verified": {
+            "get":{
+                "summary": "Busca todos os Usuários Varificados ",
+                "description":"busca todos os usuários verificados do sistema, usuários que já possuam documentação enviada e áptos a terem uma conta criada.",
+                "tags":["Admin"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"adminId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"ID de um usuário admin",
+                        "required":true
+                    }
+                ],
+                "responses":{
+                    "400":{
+                        "description":"User Not exists"
+                    },
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object"
+                                },
+                                "examples":{
+                                    "userAdmin":{
+                                        "value":{
+                                            "isAdmin": false,
+			                            "_id": "629982c064f9ef1149c9057a",
+			                            "name": "teste",
+			                            "email": "teste@teste.com",
+			                            "creatAt": "2022-06-03T03:40:48.453Z"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/{adminId}/account": {
+            "get":{
+                "summary": "Busca todos as Contas ",
+                "description":"busca todos as contas do sistema",
+                "tags":["Admin"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"adminId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"ID de um usuário admin",
+                        "required":true
+                    }
+                ],
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object"
+                                },
+                                "examples":{
+                                    "account":{
+                                        "value":{
+                                            "_id": "629a136b40bb933093602b30",
+                                            "accountName": "Account A",
+                                            "balance": 100,
+                                            "user": {
+                                                "isAdmin": false,
+                                                "_id": "6299849078516c06305c3a73",
+                                                "name": "teste3",
+                                                "email": "teste3@teste.com",
+                                                "creatAt": "2022-06-03T03:48:32.011Z",
+                                                "__v": 0
+                                            },
+                                            "creatAt": "2022-06-03T13:58:03.704Z"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/{adminId}/create/account": {
+            "post":{
+                "summary": "Cadastro de uma conta ",
+                "description":"criação de uma nova conta só pode ser feita por um usuário admin, crie um usuario admin",
+                "tags":["Admin"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"adminId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"ID de um usuário admin",
+                        "required":true
+                    }
+                ],
+                "requestBody":{
+                    "content":{
+                        "application/json": {
+                            "schema":{
+                                "$ref":"#/components/schemas/Account"
+                            },
+                            "examples":{
+                                "account":{
+                                    "value":{
+                                        "accountName":"Account C",
+                                        "balance":"1000",
+                                        "accountOwner":"<replace for user not admin ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "400": {
+                        "description":"account already exists"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "$ref":"#/components/schemas/Account"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/{accountId}": {
+            "get":{
+                "summary": "Busca uma conta por ID",
+                "description":"busca uma conta, que já cadastrada",
+                "tags":["Admin"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"accountId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"ID de uma conta",
+                        "required":true
+                    }
+                ],
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "400": {
+                        "description":"account already exists"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "$ref":"#/components/schemas/Account"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pix/{senderUserId}": {
+            "put":{
+                "summary": "Transferencia de valores entre contas ",
+                "description":"Faz as Transferencias de valores entre contas",
+                "tags":["PaymentsP2P"],
+                "security":[{"bearerAuth":[]}],
+                "parameters":[
+                    {
+                        "name":"senderUserId",
+                        "type":"string",
+                        "in":"path",
+                        "description":"ID de um usuário que ira efetuar a tranferência ",
+                        "required":true
+                    }
+                ],
+                "requestBody":{
+                    "content":{
+                        "application/json": {
+                            "schema":{
+                                "$ref":"#/components/schemas/Account"
+                            },
+                            "examples":{
+                                "account":{
+                                    "value":{		
+                                        "destinatario":"gigin@email.com",
+                                        "valor":10
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses":{
+                    "401":{
+                        "description":"Unauthorized"
+                    },
+                    "400": {
+                        "description":"account invalid or not exists"
+                    },
+                    "422": {
+                        "description":"Bad Request"
+                    },
+                    "200": {
+                        "description":"ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"object",
+                                    "$ref":"#/components/schemas/Payments"
+                                },
+                                "examples":{
+                                    "paymentTicket":{
+                                        "value":{
+                                            "accountSenderUpdate": {
+                                                "_id": "629a136b40bb933093602b30",
+                                                "accountName": "Account A",
+                                                "balance": 30,
+                                                "user": "6299849078516c06305c3a73",
+                                                "creatAt": "2022-06-03T13:58:03.704Z",
+                                                "__v": 0
+                                            },
+                                            "receivingAccountUpdate": {
+                                                "_id": "629a89eb399cfa4f4a4f6d13",
+                                                "accountName": "Account B",
+                                                "balance": 170,
+                                                "user": "629a8984399cfa4f4a4f6d04",
+                                                "creatAt": "2022-06-03T22:23:39.059Z",
+                                                "__v": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+   },
+   "components":{
+       "schemas":{
+           "User":{
+               "type":"object",
+               "properties":{
+                   "id":{
+                       "type":"string"
+                   },
+                   "name":{
+                       "type":"string"
+                   },
+                   "email":{
+                       "type":"string"
+                   },
+                   "password":{
+                       "type":"string"
+                   },
+                   "confirmPassword":{
+                       "type":"string"
+                   },
+                   "isAdmin":{
+                       "type":"boolean"
+                   }
+               }
+           },
+           "UserLogin":{
+                "type":"object",
+                "properties":{
+                    "email":{
+                        "type":"string"
+                    },
+                    "password":{
+                        "type":"string"
+                    }
+                }
+            },
+            "UploadDoc":{
+                "type":"object",
+                "properties":{
+                    "name":{
+                        "type":"string"
+                    },
+                    "size":{
+                        "type":"intger"
+                    },
+                    "key":{
+                        "type":"string"
+                    },
+                    "url":{
+                        "type":"String"
+                    },
+                    "user":{
+                        "type":"string"
+                    },
+                    "fileName":{
+                        "type":"binary"
+                    }
+                }
+            },
+            "DocsByUser":{
+                "type":"object",
+                "properties":{
+                    "id":{
+                        "type":"string"
+                    },
+                    "name":{
+                        "type":"string"
+                    },
+                    "size":{
+                        "type":"number"
+                    },
+                    "key":{
+                        "type":"string"
+                    },
+                    "url":{
+                        "type":"String"
+                    },
+                    "user":{
+                        "type":"string"
+                    }
+                }
+            },
+            "Account":{
+                "type":"object",
+                "properties":{
+                    "id":{
+                        "type":"string"
+                    },
+                    "accountName":{
+                        "type":"string"
+                    },
+                    "balance":{
+                        "type":"number"
+                    },
+                    "user":{
+                        "type":"string"
+                    },
+                    "creatAt":{
+                        "type":"string"
+                    }
+                }
+            },
+            "Payments":{
+                "type":"object",
+                "properties":{
+                    "id":{
+                        "type":"string"
+                    },
+                    "accountName":{
+                        "type":"string"
+                    },
+                    "balance":{
+                        "type":"number"
+                    },
+                    "user":{
+                        "type":"string"
+                    },
+                    "creatAt":{
+                        "type":"string"
+                    }
+                }
+            } 
+       },
+       "securitySchemes":{
+           "bearerAuth":{
+               "type":"http",
+               "scheme":"bearer",
+               "bearerFormat":"JWT"
+           }
+       }
+   }
+}
